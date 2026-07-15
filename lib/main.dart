@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'pages/home_shell.dart';
 import 'pages/login_page.dart';
+import 'pages/register_page.dart';
 import 'pages/splash_page.dart';
 import 'theme/app_theme.dart';
 
@@ -21,6 +22,7 @@ class DemoKinoApp extends StatelessWidget {
       routes: {
         SplashPage.routeName: (_) => const SplashPage(),
         LoginPage.routeName: (_) => const LoginPage(),
+        RegisterPage.routeName: (_) => const RegisterPage(),
         HomeShell.routeName: (_) => const HomeShell(),
       },
     );

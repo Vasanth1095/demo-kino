@@ -4,54 +4,49 @@ import '../services/auth_store.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/primary_action_button.dart';
 import 'home_shell.dart';
-import 'register_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
-  static const routeName = '/login';
+  static const routeName = '/register';
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authStore = AuthStore();
 
-  bool _isChecking = false;
+  bool _isSaving = false;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isChecking = true);
-    final canLogin = await _authStore.canLogin(
+    setState(() => _isSaving = true);
+
+    await _authStore.registerUser(
+      name: _nameController.text,
       phone: _phoneController.text,
       password: _passwordController.text,
     );
 
     if (!mounted) return;
-    setState(() => _isChecking = false);
-
-    if (canLogin) {
-      Navigator.of(context).pushReplacementNamed(HomeShell.routeName);
-      return;
-    }
-
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('No matching account found. Register as a new user.'),
-      ),
+      const SnackBar(content: Text('Account created. Welcome to Demo Kino.')),
     );
+    Navigator.of(context).pushReplacementNamed(HomeShell.routeName);
   }
 
   @override
@@ -72,13 +67,30 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     const AppLogo(size: 68),
                     const SizedBox(height: 34),
-                    Text('Welcome back', style: textTheme.headlineLarge),
+                    Text('Create account', style: textTheme.headlineLarge),
                     const SizedBox(height: 10),
                     Text(
-                      'Sign in to continue your film queue.',
+                      'Register once, then use your phone number to login next time.',
                       style: textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 34),
+                    TextFormField(
+                      controller: _nameController,
+                      textInputAction: TextInputAction.next,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        labelText: 'Name',
+                        hintText: 'Your full name',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().length < 2) {
+                          return 'Enter your name';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
@@ -91,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
                       validator: (value) {
                         final phone = value?.trim() ?? '';
                         if (phone.length < 7) {
-                          return 'Enter your phone number';
+                          return 'Enter a valid phone number';
                         }
                         return null;
                       },
@@ -102,33 +114,31 @@ class _LoginPageState extends State<LoginPage> {
                       obscureText: true,
                       textInputAction: TextInputAction.done,
                       decoration: const InputDecoration(
-                        labelText: 'Password',
-                        hintText: 'Enter your password',
+                        labelText: 'Set password',
+                        hintText: 'At least 6 characters',
                         prefixIcon: Icon(Icons.lock_outline_rounded),
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Enter your password';
+                        if (value == null || value.length < 6) {
+                          return 'Password must be at least 6 characters';
                         }
                         return null;
                       },
-                      onFieldSubmitted: (_) => _login(),
+                      onFieldSubmitted: (_) => _register(),
                     ),
                     const SizedBox(height: 28),
                     PrimaryActionButton(
-                      label: _isChecking ? 'Checking...' : 'Login',
-                      icon: Icons.arrow_forward_rounded,
-                      onPressed: _isChecking ? () {} : _login,
+                      label: _isSaving ? 'Creating account...' : 'Register',
+                      icon: Icons.person_add_alt_1_rounded,
+                      onPressed: _isSaving ? () {} : _register,
                     ),
                     const SizedBox(height: 18),
                     Center(
                       child: TextButton(
-                        onPressed: _isChecking
+                        onPressed: _isSaving
                             ? null
-                            : () => Navigator.of(
-                                  context,
-                                ).pushNamed(RegisterPage.routeName),
-                        child: const Text('New user? Register'),
+                            : () => Navigator.of(context).pop(),
+                        child: const Text('Already have an account? Login'),
                       ),
                     ),
                   ],
